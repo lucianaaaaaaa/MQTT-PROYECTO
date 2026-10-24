@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "objeto-inteligente": {
+      "command": "C:\\RUTA\\AL\\REPO\\mcp_server\\.venv\\Scripts\\python.exe",
+      "args": ["C:\\RUTA\\AL\\REPO\\mcp_server\\server.py"],
+      "env": {
+        "MQTT_BROKER": "broker.hivemq.com",
+        "MQTT_PORT": "1883",
+        "MQTT_TLS": "0",
+        "MQTT_USER": "",
+        "MQTT_PASSWORD": "",
+        "TOPIC_DISTANCIA": "sis234/grupoX/distancia",
+        "TOPIC_CMD": "sis234/grupoX/cmd"
+      }
+    }
+  }
+}
