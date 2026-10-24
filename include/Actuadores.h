@@ -22,8 +22,10 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 
-// config.h no se versiona (.gitignore); si existe, define los pines reales.
-#if __has_include("config.h")
+// config.h (raíz del repo) no se versiona; si existe, define los pines reales.
+#if __has_include("../config.h")
+#include "../config.h"
+#elif __has_include("config.h")
 #include "config.h"
 #endif
 
@@ -204,11 +206,11 @@ class Actuadores {
    *
    * @param buffer Destino donde se escribe el texto (terminado en '\0').
    * @param tam    Tamaño del buffer en bytes (se recomiendan ≥ 64).
-   * @return Longitud del JSON escrito, o 0 si el buffer es insuficiente.
+   * @return true si el JSON se escribió completo; false si el buffer es insuficiente.
    */
-  size_t estadoJson(char* buffer, size_t tam) const {
+  bool estadoJson(char* buffer, size_t tam) const {
     if (buffer == nullptr || tam == 0) {
-      return 0;
+      return false;
     }
 
     JsonDocument doc;
@@ -220,9 +222,10 @@ class Actuadores {
     if (measureJson(doc) >= tam) {
       Serial.println(F("[Actuadores] Buffer insuficiente para el estado"));
       buffer[0] = '\0';
-      return 0;
+      return false;
     }
-    return serializeJson(doc, buffer, tam);
+    serializeJson(doc, buffer, tam);
+    return true;
   }
 
  private:
