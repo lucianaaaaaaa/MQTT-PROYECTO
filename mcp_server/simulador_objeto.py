@@ -2,7 +2,7 @@
 Simulador del objeto inteligente para probar el servidor MCP sin el ESP32.
 
 Reproduce el contrato MQTT del firmware:
-  - publica una distancia que varía suavemente (4 lecturas/s) en /distancia;
+  - publica una distancia que varía suavemente (1 lectura cada 5 s) en /distancia;
   - aplica los comandos de /cmd sobre tres LEDs virtuales (incluye "todos")
     y publica su estado (retenido) en /estado;
   - publica "online" (retenido) en /conexion y deja "offline" como Last Will.
@@ -27,7 +27,7 @@ TOPICO_DISTANCIA = f"{PREFIJO}/distancia"
 TOPICO_CMD = f"{PREFIJO}/cmd"
 TOPICO_ESTADO = f"{PREFIJO}/estado"
 TOPICO_CONEXION = f"{PREFIJO}/conexion"
-PERIODO_S = 0.25
+PERIODO_S = 5.0
 
 leds = {"rojo": False, "amarillo": False, "verde": False}
 

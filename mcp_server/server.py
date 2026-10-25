@@ -121,7 +121,7 @@ class ClienteMQTT:
       suscribirse en cada conexión.
     """
 
-    TAMANO_HISTORIAL = 120  # ~30 s a 4 lecturas/s
+    TAMANO_HISTORIAL = 120  # ~10 min a 1 lectura cada 5 s
 
     def __init__(self, config: ConfiguracionMQTT) -> None:
         self._config = config
@@ -301,8 +301,9 @@ mcp = FastMCP(
 )
 
 # Si la última lectura es más antigua que esto, se avisa que el objeto
-# podría estar desconectado (el firmware publica 4 lecturas/s).
-LECTURA_VIEJA_S = 5.0
+# podría estar desconectado (el firmware publica 1 lectura cada 5 s, así que
+# se toleran hasta 2 lecturas perdidas).
+LECTURA_VIEJA_S = 15.0
 
 
 def _describir_lectura(lectura: Lectura) -> dict:
@@ -330,7 +331,7 @@ def obtener_distancia() -> dict:
     Devuelve la distancia más reciente (en cm) medida por el sensor
     ultrasónico del objeto inteligente, y hace cuántos segundos se recibió.
     """
-    lectura = mqtt_cliente.ultima_lectura(espera_s=5.0)
+    lectura = mqtt_cliente.ultima_lectura(espera_s=6.0)  # > periodo de publicación (5 s)
     if lectura is None:
         return {
             "error": "Aún no se recibió ninguna lectura del sensor.",
@@ -344,7 +345,7 @@ def obtener_distancia() -> dict:
 @mcp.tool()
 def obtener_historial(cantidad: int = 20) -> dict:
     """
-    Devuelve las últimas lecturas de distancia (máx. 120, ≈30 segundos) junto
+    Devuelve las últimas lecturas de distancia (máx. 120, ≈10 minutos) junto
     con estadísticas: mínimo, máximo y promedio en cm. Útil para describir
     tendencias, por ejemplo si un objeto se está acercando o alejando.
 
