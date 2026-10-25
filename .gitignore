@@ -8,3 +8,6 @@
 .venv/
 __pycache__/
 *.pyc
+
+# Credenciales del objeto inteligente (plantilla versionada: config.example.h)
+config.h

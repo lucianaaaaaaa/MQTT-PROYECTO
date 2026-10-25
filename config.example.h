@@ -3,10 +3,10 @@
  * @brief Plantilla de configuración del Objeto Inteligente (SIN credenciales reales).
  *
  * Uso:
- *   1. Copiar este archivo como `config.h` en la misma carpeta (firmware/).
+ *   1. Copiar este archivo como `config.h` en la misma carpeta (raíz del repositorio).
  *   2. Reemplazar los valores de ejemplo por los reales.
  *
- * `config.h` está excluido en firmware/.gitignore y NUNCA debe subirse al repositorio.
+ * `config.h` está excluido en .gitignore y NUNCA debe subirse al repositorio.
  */
 #ifndef CONFIG_H
 #define CONFIG_H
