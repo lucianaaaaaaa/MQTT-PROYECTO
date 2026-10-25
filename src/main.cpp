@@ -34,11 +34,15 @@ static const char TOPICO_CONEXION[]  = MQTT_PREFIJO "/conexion";   // "online"/"
 // ----------------------------------------------------------------------------
 // Hardware
 // ----------------------------------------------------------------------------
-// TODO: ajustar a los pines definitivos del montaje.
+// Pines del montaje final.
 // ATENCIÓN: el HC-SR04 alimentado a 5 V entrega 5 V en ECHO y los GPIO del ESP32
 // toleran máximo 3.6 V. Usar un divisor de tensión (p. ej. 1 kΩ en serie + 2 kΩ a GND).
-constexpr uint8_t PIN_TRIG = 5;
-constexpr uint8_t PIN_ECHO = 18;
+// Los LEDs no pueden ir en GPIO 34-39: en el ESP32 esos pines son solo de entrada.
+constexpr uint8_t PIN_TRIG         = 25;
+constexpr uint8_t PIN_ECHO         = 26;
+constexpr uint8_t PIN_LED_ROJO     = 33;
+constexpr uint8_t PIN_LED_AMARILLO = 27;
+constexpr uint8_t PIN_LED_VERDE    = 32;
 
 // ----------------------------------------------------------------------------
 // Parámetros de medición y publicación
@@ -49,7 +53,7 @@ constexpr float    DISTANCIA_MIN_CM         = 2.0f;
 constexpr float    DISTANCIA_MAX_CM         = 400.0f;
 constexpr float    TEMPERATURA_AMBIENTE_C   = 20.0f; // Para compensar la velocidad del sonido
 constexpr float    OFFSET_CALIBRACION_CM    = 0.0f;  // Ajustar tras medir contra la cinta métrica
-constexpr uint32_t PERIODO_PUBLICACION_MS   = 250;   // 4 lecturas/s (requisito: ≥ 2 lecturas/s)
+constexpr uint32_t PERIODO_PUBLICACION_MS   = 5000;  // 1 lectura cada 5 s (el sensor sigue muestreando cada 60 ms)
 constexpr uint32_t PERIODO_DIAGNOSTICO_MS   = 10000; // Resumen por Serial para las pruebas de NFR
 
 // ----------------------------------------------------------------------------
@@ -70,7 +74,7 @@ ConexionMQTT conexion(WIFI_SSID, WIFI_PASSWORD,
 // Estado de los LEDs según el contrato del grupo: {"rojo": true, "amarillo": false, "verde": false}
 static const char TOPICO_ESTADO_LEDS[] = MQTT_PREFIJO "/estado";
 
-Actuadores actuadores;  // Pines LED_*_PIN de config.h (por defecto 25/26/27)
+Actuadores actuadores(PIN_LED_ROJO, PIN_LED_AMARILLO, PIN_LED_VERDE);
 bool estabaConectado = false;
 
 /// Publica el estado de los LEDs como mensaje retenido (RF3).
