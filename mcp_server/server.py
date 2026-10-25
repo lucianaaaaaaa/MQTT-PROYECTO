@@ -1,12 +1,19 @@
 """
-Servidor MCP del Objeto Inteligente (SIS-234 — Práctica MQTT).
+Servidor MCP del Objeto Inteligente (SIS-234 — Práctica MQTT, grupo 4).
 
 Expone a una herramienta de IA (Claude Desktop) un conjunto de herramientas
-MCP para leer la distancia medida por el sensor ultrasónico y controlar los
-LEDs del objeto inteligente. Toda la comunicación con el objeto pasa por el
-broker MQTT en la nube: este servidor es un cliente MQTT más.
+MCP para leer la distancia medida por el sensor ultrasónico, consultar y
+controlar los LEDs del objeto inteligente y saber si este está en línea.
+Toda la comunicación con el objeto pasa por el broker MQTT en la nube: este
+servidor es un cliente MQTT más.
 
     Claude Desktop <--MCP (stdio)--> server.py <--MQTT--> broker <--> ESP32
+
+Contrato MQTT (prefijo sis234/grupo4):
+    /distancia  ESP32 -> todos    {"cm": 42.7}
+    /cmd        todos -> ESP32    {"led": "rojo|amarillo|verde|todos", "estado": "on|off"}
+    /estado     ESP32 -> todos    {"rojo": true, "amarillo": false, "verde": false}
+    /conexion   ESP32 -> todos    "online" / "offline" (retenido, Last Will)
 
 Configuración (variables de entorno, ver claude_desktop_config.json):
     MQTT_BROKER        Host del broker            (default: broker.hivemq.com)
@@ -14,8 +21,7 @@ Configuración (variables de entorno, ver claude_desktop_config.json):
     MQTT_TLS           "1" para usar TLS           (default: 0)
     MQTT_USER          Usuario del broker          (opcional)
     MQTT_PASSWORD      Contraseña del broker       (opcional)
-    TOPIC_DISTANCIA    Tópico de lecturas          (default: sis234/grupoX/distancia)
-    TOPIC_CMD          Tópico de comandos          (default: sis234/grupoX/cmd)
+    MQTT_PREFIJO       Prefijo de los tópicos      (default: sis234/grupo4)
 
 Importante: con transporte stdio, stdout está reservado para el protocolo MCP.
 Todos los mensajes de diagnóstico se escriben en stderr mediante `logging`.
@@ -59,8 +65,23 @@ class ConfiguracionMQTT:
     usar_tls: bool
     usuario: str | None
     contrasena: str | None
-    topico_distancia: str
-    topico_cmd: str
+    prefijo: str
+
+    @property
+    def topico_distancia(self) -> str:
+        return f"{self.prefijo}/distancia"
+
+    @property
+    def topico_cmd(self) -> str:
+        return f"{self.prefijo}/cmd"
+
+    @property
+    def topico_estado(self) -> str:
+        return f"{self.prefijo}/estado"
+
+    @property
+    def topico_conexion(self) -> str:
+        return f"{self.prefijo}/conexion"
 
     @classmethod
     def desde_entorno(cls) -> "ConfiguracionMQTT":
@@ -72,8 +93,7 @@ class ConfiguracionMQTT:
             usar_tls=usar_tls,
             usuario=os.getenv("MQTT_USER") or None,
             contrasena=os.getenv("MQTT_PASSWORD") or None,
-            topico_distancia=os.getenv("TOPIC_DISTANCIA", "sis234/grupoX/distancia"),
-            topico_cmd=os.getenv("TOPIC_CMD", "sis234/grupoX/cmd"),
+            prefijo=os.getenv("MQTT_PREFIJO", "sis234/grupo4").rstrip("/"),
         )
 
 
@@ -93,18 +113,22 @@ class ClienteMQTT:
     """
     Cliente MQTT del servidor MCP.
 
-    - Se suscribe al tópico de distancia y guarda la última lectura y un
-      historial acotado.
+    - Se suscribe a los tópicos de distancia, estado de LEDs y conexión, y
+      guarda la última lectura, un historial acotado, el estado reportado de
+      los LEDs y si el objeto inteligente está en línea.
     - Publica comandos JSON en el tópico de comandos.
     - Reconecta automáticamente (paho reintenta en su hilo de red) y vuelve a
       suscribirse en cada conexión.
     """
 
-    TAMANO_HISTORIAL = 120  # ~1 min a 2 lecturas/s
+    TAMANO_HISTORIAL = 120  # ~30 s a 4 lecturas/s
 
     def __init__(self, config: ConfiguracionMQTT) -> None:
         self._config = config
         self._historial: deque[Lectura] = deque(maxlen=self.TAMANO_HISTORIAL)
+        self._estado_leds: dict[str, bool] | None = None
+        self._estado_leds_en: float | None = None
+        self._conexion_objeto: str | None = None  # "online" / "offline"
         self._candado = threading.Lock()
         self._conectado = threading.Event()
         self._nueva_lectura = threading.Event()
@@ -145,8 +169,13 @@ class ClienteMQTT:
         if reason_code.is_failure:
             log.error("Conexión rechazada por el broker: %s", reason_code)
             return
-        log.info("Conectado al broker; suscribiendo a %s", self._config.topico_distancia)
-        cliente.subscribe(self._config.topico_distancia, qos=0)
+        topicos = (
+            self._config.topico_distancia,
+            self._config.topico_estado,
+            self._config.topico_conexion,
+        )
+        log.info("Conectado al broker; suscribiendo a %s", ", ".join(topicos))
+        cliente.subscribe([(topico, 0) for topico in topicos])
         self._conectado.set()
 
     def _al_desconectar(self, _cliente, _userdata, _flags, reason_code, _properties) -> None:
@@ -154,13 +183,44 @@ class ClienteMQTT:
         log.warning("Desconectado del broker (%s); paho reintentará", reason_code)
 
     def _al_recibir_mensaje(self, _cliente, _userdata, mensaje: mqtt.MQTTMessage) -> None:
-        cm = self._parsear_distancia(mensaje.payload)
+        if mensaje.topic == self._config.topico_distancia:
+            self._registrar_distancia(mensaje.payload)
+        elif mensaje.topic == self._config.topico_estado:
+            self._registrar_estado_leds(mensaje.payload)
+        elif mensaje.topic == self._config.topico_conexion:
+            self._registrar_conexion(mensaje.payload)
+
+    def _registrar_distancia(self, payload: bytes) -> None:
+        cm = self._parsear_distancia(payload)
         if cm is None:
-            log.warning("Mensaje de distancia inválido: %r", mensaje.payload[:100])
+            log.warning("Mensaje de distancia inválido: %r", payload[:100])
             return
         with self._candado:
             self._historial.append(Lectura(cm=cm, recibida_en=time.time()))
         self._nueva_lectura.set()
+
+    def _registrar_estado_leds(self, payload: bytes) -> None:
+        try:
+            dato = json.loads(payload.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            dato = None
+        if not isinstance(dato, dict) or not all(
+            isinstance(dato.get(color), bool) for color in COLORES_LED
+        ):
+            log.warning("Mensaje de estado de LEDs inválido: %r", payload[:100])
+            return
+        with self._candado:
+            self._estado_leds = {color: dato[color] for color in COLORES_LED}
+            self._estado_leds_en = time.time()
+
+    def _registrar_conexion(self, payload: bytes) -> None:
+        texto = payload.decode("utf-8", errors="replace").strip().lower()
+        if texto not in ("online", "offline"):
+            log.warning("Mensaje de conexión inválido: %r", payload[:100])
+            return
+        with self._candado:
+            self._conexion_objeto = texto
+        log.info("Objeto inteligente: %s", texto)
 
     @staticmethod
     def _parsear_distancia(payload: bytes) -> float | None:
@@ -175,7 +235,7 @@ class ClienteMQTT:
             return float(dato)
         return None
 
-    # ------------------------------------------------------------------ lecturas
+    # ------------------------------------------------------------------ consultas
 
     def ultima_lectura(self, espera_s: float = 0.0) -> Lectura | None:
         """
@@ -195,6 +255,17 @@ class ClienteMQTT:
         """Devuelve las últimas `cantidad` lecturas, de la más antigua a la más reciente."""
         with self._candado:
             return list(self._historial)[-cantidad:]
+
+    def estado_leds(self) -> tuple[dict[str, bool] | None, float | None]:
+        """Último estado de LEDs reportado por el objeto y cuándo llegó."""
+        with self._candado:
+            leds = dict(self._estado_leds) if self._estado_leds else None
+            return leds, self._estado_leds_en
+
+    def conexion_objeto(self) -> str | None:
+        """"online", "offline" o None si el objeto aún no lo informó."""
+        with self._candado:
+            return self._conexion_objeto
 
     # ------------------------------------------------------------------ comandos
 
@@ -218,10 +289,19 @@ class ClienteMQTT:
 
 config = ConfiguracionMQTT.desde_entorno()
 mqtt_cliente = ClienteMQTT(config)
-mcp = FastMCP("objeto-inteligente-sis234")
+mcp = FastMCP(
+    "objeto-inteligente-sis234",
+    instructions=(
+        "Controla un objeto inteligente (ESP32) con un sensor ultrasónico y "
+        "exactamente tres LEDs: rojo, amarillo y verde. El objeto NO tiene "
+        "servomotor ni otros actuadores: si el usuario pide mover un servo, "
+        "explícale que este prototipo solo tiene los tres LEDs y no llames "
+        "ninguna herramienta. Las distancias están en centímetros."
+    ),
+)
 
 # Si la última lectura es más antigua que esto, se avisa que el objeto
-# podría estar desconectado (el firmware publica ≥ 2 lecturas/s).
+# podría estar desconectado (el firmware publica 4 lecturas/s).
 LECTURA_VIEJA_S = 5.0
 
 
@@ -235,6 +315,15 @@ def _describir_lectura(lectura: Lectura) -> dict:
     return resultado
 
 
+def _enviar(comando: dict) -> dict | None:
+    """Publica un comando; devuelve un dict de error si falla, o None si se envió."""
+    try:
+        mqtt_cliente.publicar_comando(comando)
+    except RuntimeError as error:
+        return {"ok": False, "error": str(error)}
+    return None
+
+
 @mcp.tool()
 def obtener_distancia() -> dict:
     """
@@ -246,6 +335,7 @@ def obtener_distancia() -> dict:
         return {
             "error": "Aún no se recibió ninguna lectura del sensor.",
             "broker_conectado": mqtt_cliente.conectado,
+            "objeto_inteligente": mqtt_cliente.conexion_objeto() or "desconocido",
             "topico": config.topico_distancia,
         }
     return _describir_lectura(lectura)
@@ -254,7 +344,7 @@ def obtener_distancia() -> dict:
 @mcp.tool()
 def obtener_historial(cantidad: int = 20) -> dict:
     """
-    Devuelve las últimas lecturas de distancia (máx. 120, ≈1 minuto) junto
+    Devuelve las últimas lecturas de distancia (máx. 120, ≈30 segundos) junto
     con estadísticas: mínimo, máximo y promedio en cm. Útil para describir
     tendencias, por ejemplo si un objeto se está acercando o alejando.
 
@@ -276,19 +366,33 @@ def obtener_historial(cantidad: int = 20) -> dict:
 
 
 @mcp.tool()
+def obtener_estado_leds() -> dict:
+    """
+    Indica qué LEDs están encendidos, según el último estado que reportó el
+    propio objeto inteligente (no el último comando enviado).
+    """
+    leds, recibido_en = mqtt_cliente.estado_leds()
+    if leds is None:
+        return {"error": "El objeto inteligente aún no reportó el estado de sus LEDs."}
+    return {
+        "leds": {color: "on" if encendido else "off" for color, encendido in leds.items()},
+        "encendidos": [color for color, encendido in leds.items() if encendido],
+        "antiguedad_s": round(time.time() - recibido_en, 1),
+    }
+
+
+@mcp.tool()
 def controlar_led(color: Color, estado: Estado) -> dict:
     """
-    Enciende o apaga un LED del objeto inteligente.
+    Enciende o apaga un LED del objeto inteligente. El objeto solo tiene
+    LEDs (rojo, amarillo y verde); no tiene servomotor.
 
     Args:
         color: "rojo", "amarillo" o "verde".
         estado: "on" para encender, "off" para apagar.
     """
-    try:
-        mqtt_cliente.publicar_comando({"led": color, "estado": estado})
-    except RuntimeError as error:
-        return {"ok": False, "error": str(error)}
-    return {"ok": True, "led": color, "estado": estado}
+    error = _enviar({"led": color, "estado": estado})
+    return error or {"ok": True, "led": color, "estado": estado}
 
 
 @mcp.tool()
@@ -303,32 +407,42 @@ def establecer_leds(rojo: Estado, amarillo: Estado, verde: Estado) -> dict:
         verde: "on" u "off".
     """
     estados = {"rojo": rojo, "amarillo": amarillo, "verde": verde}
-    try:
-        for color, estado in estados.items():
-            mqtt_cliente.publicar_comando({"led": color, "estado": estado})
-    except RuntimeError as error:
-        return {"ok": False, "error": str(error)}
+    if len(set(estados.values())) == 1:
+        comandos = [{"led": "todos", "estado": rojo}]
+    else:
+        comandos = [{"led": color, "estado": estado} for color, estado in estados.items()]
+    for comando in comandos:
+        error = _enviar(comando)
+        if error:
+            return error
     return {"ok": True, "leds": estados}
 
 
 @mcp.tool()
 def apagar_todos() -> dict:
-    """Apaga los tres LEDs del objeto inteligente."""
-    return establecer_leds("off", "off", "off")
+    """Apaga los tres LEDs del objeto inteligente con un único comando."""
+    error = _enviar({"led": "todos", "estado": "off"})
+    return error or {"ok": True, "leds": {color: "off" for color in COLORES_LED}}
 
 
 @mcp.tool()
 def estado_conexion() -> dict:
     """
-    Informa si el servidor está conectado al broker MQTT, a qué broker y
-    tópicos, y cuándo llegó la última lectura del objeto inteligente.
+    Informa si el servidor está conectado al broker MQTT, si el objeto
+    inteligente está en línea (online/offline), los tópicos usados y cuándo
+    llegó la última lectura de distancia.
     """
     lectura = mqtt_cliente.ultima_lectura()
     return {
         "broker_conectado": mqtt_cliente.conectado,
         "broker": f"{config.broker}:{config.puerto}",
-        "topico_distancia": config.topico_distancia,
-        "topico_cmd": config.topico_cmd,
+        "objeto_inteligente": mqtt_cliente.conexion_objeto() or "desconocido",
+        "topicos": {
+            "distancia": config.topico_distancia,
+            "cmd": config.topico_cmd,
+            "estado": config.topico_estado,
+            "conexion": config.topico_conexion,
+        },
         "ultima_lectura": _describir_lectura(lectura) if lectura else None,
     }
 

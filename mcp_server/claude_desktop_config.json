@@ -9,8 +9,7 @@
         "MQTT_TLS": "0",
         "MQTT_USER": "",
         "MQTT_PASSWORD": "",
-        "TOPIC_DISTANCIA": "sis234/grupoX/distancia",
-        "TOPIC_CMD": "sis234/grupoX/cmd"
+        "MQTT_PREFIJO": "sis234/grupo4"
       }
     }
   }
