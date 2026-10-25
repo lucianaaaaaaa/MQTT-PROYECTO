@@ -3,8 +3,8 @@
  * @brief Control de los tres LEDs (rojo, amarillo, verde) del objeto inteligente.
  *
  * Clase header-only que encapsula los actuadores del ESP32. Recibe los comandos
- * del tópico MQTT `sis234/grupoX/cmd`, los valida y los aplica sobre los LEDs,
- * y genera el mensaje JSON que se publica en `sis234/grupoX/estado`.
+ * del tópico MQTT `sis234/grupo4/cmd`, los valida y los aplica sobre los LEDs,
+ * y genera el mensaje JSON que se publica en `sis234/grupo4/estado`.
  *
  * Contrato MQTT:
  *  - Comando (entrada): {"led": "rojo", "estado": "on"}

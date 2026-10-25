@@ -24,11 +24,12 @@
 // ----------------------------------------------------------------------------
 // Tópicos MQTT (el prefijo debe ser único del grupo en el broker público)
 // ----------------------------------------------------------------------------
-#define MQTT_PREFIJO "sis234/grupoX"  // TODO: reemplazar por el prefijo acordado con el grupo
+#define MQTT_PREFIJO "sis234/grupo4"
 
 static const char TOPICO_DISTANCIA[] = MQTT_PREFIJO "/distancia";       // Publica: {"cm": 42.7}
-static const char TOPICO_COMANDOS[]  = MQTT_PREFIJO "/actuadores/cmd";  // Se suscribe
-static const char TOPICO_ESTADO[]    = MQTT_PREFIJO "/estado";          // "online"/"offline" (retenido)
+static const char TOPICO_COMANDOS[]  = MQTT_PREFIJO "/cmd";            // Se suscribe
+static const char TOPICO_ESTADO[]    = MQTT_PREFIJO "/estado";         // Publica: {"rojo": true, ...} (retenido)
+static const char TOPICO_CONEXION[]  = MQTT_PREFIJO "/conexion";       // "online"/"offline" (retenido)
 
 // ----------------------------------------------------------------------------
 // Hardware
@@ -59,7 +60,7 @@ SensorUltrasonico sensor(PIN_TRIG, PIN_ECHO, MUESTRAS_FILTRO, INTERVALO_MUESTREO
 
 ConexionMQTT conexion(WIFI_SSID, WIFI_PASSWORD,
                       MQTT_BROKER, MQTT_PUERTO, MQTT_USUARIO, MQTT_CLAVE,
-                      TOPICO_ESTADO);
+                      TOPICO_CONEXION);
 
 // TODO (Integrante 3): #include "Actuadores.h" y crear aquí el objeto de actuadores.
 

@@ -4,21 +4,21 @@
     "broker": "broker.hivemq.com",
     "puerto": 1883,
     "protocolo": "TCP",
-    "client_id": "sis234-grupoX-app-<nombre>"
+    "client_id": "sis234-grupo4-app-<nombre>"
   },
   "dashboard": "Objeto inteligente",
   "paneles": [
-    { "tipo": "Gauge", "nombre": "Distancia", "topico": "sis234/grupoX/distancia", "json_path": "$.cm", "min": 0, "max": 200, "unidad": "cm" },
-    { "tipo": "Line Graph", "nombre": "Distancia", "topico": "sis234/grupoX/distancia", "json_path": "$.cm", "unidad": "cm" },
-    { "tipo": "Button", "nombre": "Rojo ON", "topico": "sis234/grupoX/cmd", "payload": "{\"led\":\"rojo\",\"estado\":\"on\"}", "retain": false },
-    { "tipo": "Button", "nombre": "Rojo OFF", "topico": "sis234/grupoX/cmd", "payload": "{\"led\":\"rojo\",\"estado\":\"off\"}", "retain": false },
-    { "tipo": "Button", "nombre": "Amarillo ON", "topico": "sis234/grupoX/cmd", "payload": "{\"led\":\"amarillo\",\"estado\":\"on\"}", "retain": false },
-    { "tipo": "Button", "nombre": "Amarillo OFF", "topico": "sis234/grupoX/cmd", "payload": "{\"led\":\"amarillo\",\"estado\":\"off\"}", "retain": false },
-    { "tipo": "Button", "nombre": "Verde ON", "topico": "sis234/grupoX/cmd", "payload": "{\"led\":\"verde\",\"estado\":\"on\"}", "retain": false },
-    { "tipo": "Button", "nombre": "Verde OFF", "topico": "sis234/grupoX/cmd", "payload": "{\"led\":\"verde\",\"estado\":\"off\"}", "retain": false },
-    { "tipo": "Button", "nombre": "Apagar todos", "topico": "sis234/grupoX/cmd", "payload": "{\"led\":\"todos\",\"estado\":\"off\"}", "retain": false },
-    { "tipo": "LED Indicator", "nombre": "Rojo", "topico": "sis234/grupoX/estado", "json_path": "$.rojo", "on": "true", "off": "false" },
-    { "tipo": "LED Indicator", "nombre": "Amarillo", "topico": "sis234/grupoX/estado", "json_path": "$.amarillo", "on": "true", "off": "false" },
-    { "tipo": "LED Indicator", "nombre": "Verde", "topico": "sis234/grupoX/estado", "json_path": "$.verde", "on": "true", "off": "false" }
+    { "tipo": "Gauge", "nombre": "Distancia", "topico": "sis234/grupo4/distancia", "json_path": "$.cm", "min": 0, "max": 200, "unidad": "cm" },
+    { "tipo": "Line Graph", "nombre": "Distancia", "topico": "sis234/grupo4/distancia", "json_path": "$.cm", "unidad": "cm" },
+    { "tipo": "Button", "nombre": "Rojo ON", "topico": "sis234/grupo4/cmd", "payload": "{\"led\":\"rojo\",\"estado\":\"on\"}", "retain": false },
+    { "tipo": "Button", "nombre": "Rojo OFF", "topico": "sis234/grupo4/cmd", "payload": "{\"led\":\"rojo\",\"estado\":\"off\"}", "retain": false },
+    { "tipo": "Button", "nombre": "Amarillo ON", "topico": "sis234/grupo4/cmd", "payload": "{\"led\":\"amarillo\",\"estado\":\"on\"}", "retain": false },
+    { "tipo": "Button", "nombre": "Amarillo OFF", "topico": "sis234/grupo4/cmd", "payload": "{\"led\":\"amarillo\",\"estado\":\"off\"}", "retain": false },
+    { "tipo": "Button", "nombre": "Verde ON", "topico": "sis234/grupo4/cmd", "payload": "{\"led\":\"verde\",\"estado\":\"on\"}", "retain": false },
+    { "tipo": "Button", "nombre": "Verde OFF", "topico": "sis234/grupo4/cmd", "payload": "{\"led\":\"verde\",\"estado\":\"off\"}", "retain": false },
+    { "tipo": "Button", "nombre": "Apagar todos", "topico": "sis234/grupo4/cmd", "payload": "{\"led\":\"todos\",\"estado\":\"off\"}", "retain": false },
+    { "tipo": "LED Indicator", "nombre": "Rojo", "topico": "sis234/grupo4/estado", "json_path": "$.rojo", "on": "true", "off": "false" },
+    { "tipo": "LED Indicator", "nombre": "Amarillo", "topico": "sis234/grupo4/estado", "json_path": "$.amarillo", "on": "true", "off": "false" },
+    { "tipo": "LED Indicator", "nombre": "Verde", "topico": "sis234/grupo4/estado", "json_path": "$.verde", "on": "true", "off": "false" }
   ]
 }
