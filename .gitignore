@@ -3,3 +3,6 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
+
+# Credenciales del objeto inteligente (plantilla versionada: config.example.h)
+config.h
