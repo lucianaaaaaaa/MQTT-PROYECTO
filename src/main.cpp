@@ -61,7 +61,24 @@ ConexionMQTT conexion(WIFI_SSID, WIFI_PASSWORD,
                       MQTT_BROKER, MQTT_PUERTO, MQTT_USUARIO, MQTT_CLAVE,
                       TOPICO_ESTADO);
 
-// TODO (Integrante 3): #include "Actuadores.h" y crear aquí el objeto de actuadores.
+// ----------------------------------------------------------------------------
+// Actuadores (Integrante 3): LEDs rojo/amarillo/verde controlados por TOPICO_COMANDOS
+// ----------------------------------------------------------------------------
+#include "Actuadores.h"
+
+// Estado de los LEDs según el contrato del grupo: {"rojo": true, "amarillo": false, "verde": false}
+static const char TOPICO_ESTADO_LEDS[] = MQTT_PREFIJO "/estado";
+
+Actuadores actuadores;  // Pines LED_*_PIN de config.h (por defecto 25/26/27)
+bool estabaConectado = false;
+
+/// Publica el estado de los LEDs como mensaje retenido (RF3).
+void publicarEstadoLeds() {
+    char payload[64];
+    if (actuadores.estadoJson(payload, sizeof(payload))) {
+        conexion.publicar(TOPICO_ESTADO_LEDS, payload, true);
+    }
+}
 
 uint32_t ultimaPublicacionMs = 0;
 uint32_t ultimoDiagnosticoMs = 0;
@@ -99,12 +116,14 @@ void setup() {
     sensor.begin();
     sensor.setTemperatura(TEMPERATURA_AMBIENTE_C);
     sensor.setOffsetCalibracion(OFFSET_CALIBRACION_CM);
+    actuadores.iniciar();
 
     // RF3: los comandos llegan por este tópico y se derivan a los actuadores.
     conexion.suscribir(TOPICO_COMANDOS);
     conexion.alRecibirMensaje([](const char* topico, const char* payload) {
-        if (strcmp(topico, TOPICO_COMANDOS) == 0) {
-            // TODO (Integrante 3): actuadores.procesarComando(payload);
+        if (strcmp(topico, TOPICO_COMANDOS) == 0 &&
+            actuadores.procesarComando(payload, strlen(payload))) {
+            publicarEstadoLeds();  // Solo tras un comando aplicado
         }
     });
 
@@ -116,6 +135,14 @@ void setup() {
 void loop() {
     conexion.loop();
     sensor.actualizar();
+
+    // Al (re)conectar se publica el estado real de los LEDs, para que la app y el
+    // servidor MCP no se queden con un estado retenido viejo.
+    const bool conectado = conexion.conectado();
+    if (conectado && !estabaConectado) {
+        publicarEstadoLeds();
+    }
+    estabaConectado = conectado;
 
     const uint32_t ahora = millis();
     if (ahora - ultimaPublicacionMs >= PERIODO_PUBLICACION_MS) {
