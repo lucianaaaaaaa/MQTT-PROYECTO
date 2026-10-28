@@ -121,7 +121,7 @@ class ClienteMQTT:
       suscribirse en cada conexión.
     """
 
-    TAMANO_HISTORIAL = 120  # ~10 min a 1 lectura cada 5 s
+    TAMANO_HISTORIAL = 120  # Últimas 120 lecturas: 1 min a 2 lecturas/s, 10 min a 1 cada 5 s
 
     def __init__(self, config: ConfiguracionMQTT) -> None:
         self._config = config
@@ -130,8 +130,9 @@ class ClienteMQTT:
         self._estado_leds_en: float | None = None
         self._conexion_objeto: str | None = None  # "online" / "offline"
         self._candado = threading.Lock()
+        # Avisa a quien espera un dato (una lectura o un nuevo /estado) que llegó algo.
+        self._dato_nuevo = threading.Condition(self._candado)
         self._conectado = threading.Event()
-        self._nueva_lectura = threading.Event()
 
         self._cliente = mqtt.Client(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
@@ -197,7 +198,7 @@ class ClienteMQTT:
             return
         with self._candado:
             self._historial.append(Lectura(cm=cm, recibida_en=time.time()))
-        self._nueva_lectura.set()
+            self._dato_nuevo.notify_all()
 
     def _registrar_estado_leds(self, payload: bytes) -> None:
         try:
@@ -212,6 +213,7 @@ class ClienteMQTT:
         with self._candado:
             self._estado_leds = {color: dato[color] for color in COLORES_LED}
             self._estado_leds_en = time.time()
+            self._dato_nuevo.notify_all()
 
     def _registrar_conexion(self, payload: bytes) -> None:
         texto = payload.decode("utf-8", errors="replace").strip().lower()
@@ -242,14 +244,9 @@ class ClienteMQTT:
         Devuelve la última lectura. Si aún no hay ninguna, espera hasta
         `espera_s` segundos a que llegue la primera.
         """
-        with self._candado:
-            if self._historial:
-                return self._historial[-1]
-            self._nueva_lectura.clear()
-        if espera_s > 0 and self._nueva_lectura.wait(espera_s):
-            with self._candado:
-                return self._historial[-1] if self._historial else None
-        return None
+        with self._dato_nuevo:
+            self._dato_nuevo.wait_for(lambda: self._historial, timeout=espera_s)
+            return self._historial[-1] if self._historial else None
 
     def historial(self, cantidad: int) -> list[Lectura]:
         """Devuelve las últimas `cantidad` lecturas, de la más antigua a la más reciente."""
@@ -261,6 +258,26 @@ class ClienteMQTT:
         with self._candado:
             leds = dict(self._estado_leds) if self._estado_leds else None
             return leds, self._estado_leds_en
+
+    def esperar_estado_leds(
+        self, esperado: dict[str, bool], timeout_s: float
+    ) -> dict[str, bool] | None:
+        """
+        Espera hasta `timeout_s` segundos a que el objeto reporte en /estado
+        los LEDs de `esperado` con esos valores (los demás no se comparan).
+
+        Devuelve el último estado reportado, coincida o no, o None si el
+        objeto nunca informó su estado.
+        """
+
+        def coincide() -> bool:
+            return self._estado_leds is not None and all(
+                self._estado_leds[color] == valor for color, valor in esperado.items()
+            )
+
+        with self._dato_nuevo:
+            self._dato_nuevo.wait_for(coincide, timeout=timeout_s)
+            return dict(self._estado_leds) if self._estado_leds else None
 
     def conexion_objeto(self) -> str | None:
         """"online", "offline" o None si el objeto aún no lo informó."""
@@ -300,10 +317,12 @@ mcp = FastMCP(
     ),
 )
 
-# Si la última lectura es más antigua que esto, se avisa que el objeto
-# podría estar desconectado (el firmware publica 1 lectura cada 5 s, así que
-# se toleran hasta 2 lecturas perdidas).
+# Si la última lectura es más antigua que esto, se avisa que no es reciente
+# (holgado para cualquier periodo de publicación del firmware de hasta 5 s).
 LECTURA_VIEJA_S = 15.0
+
+# Tiempo máximo que se espera a que el objeto confirme un comando en /estado.
+CONFIRMACION_S = 3.0
 
 
 def _describir_lectura(lectura: Lectura) -> dict:
@@ -311,9 +330,14 @@ def _describir_lectura(lectura: Lectura) -> dict:
     resultado = {"distancia_cm": round(lectura.cm, 1), "antiguedad_s": antiguedad}
     if antiguedad > LECTURA_VIEJA_S:
         resultado["advertencia"] = (
-            "La lectura no es reciente; el objeto inteligente podría estar desconectado."
+            "La lectura no es reciente: el objeto inteligente podría estar "
+            "desconectado o no detectar nada dentro de su rango (2 a 400 cm)."
         )
     return resultado
+
+
+def _leds_como_texto(leds: dict[str, bool]) -> dict[str, str]:
+    return {color: "on" if encendido else "off" for color, encendido in leds.items()}
 
 
 def _enviar(comando: dict) -> dict | None:
@@ -323,6 +347,34 @@ def _enviar(comando: dict) -> dict | None:
     except RuntimeError as error:
         return {"ok": False, "error": str(error)}
     return None
+
+
+def _ejecutar(comandos: list[dict], esperado: dict[str, bool]) -> dict:
+    """
+    Publica los comandos y espera a que el objeto confirme en /estado que sus
+    LEDs quedaron como `esperado`. Que el broker reciba el comando no basta:
+    si el objeto está apagado, nadie lo aplica.
+    """
+    for comando in comandos:
+        error = _enviar(comando)
+        if error:
+            return error
+    leds = mqtt_cliente.esperar_estado_leds(esperado, CONFIRMACION_S)
+    confirmado = leds is not None and all(
+        leds[color] == valor for color, valor in esperado.items()
+    )
+    resultado = {
+        "ok": True,
+        "confirmado": confirmado,
+        "leds": _leds_como_texto(leds) if leds else None,
+    }
+    if not confirmado:
+        resultado["advertencia"] = (
+            "El comando llegó al broker, pero el objeto inteligente no confirmó "
+            f"el cambio en {CONFIRMACION_S:.0f} s (estado del objeto: "
+            f"{mqtt_cliente.conexion_objeto() or 'desconocido'})."
+        )
+    return resultado
 
 
 @mcp.tool()
@@ -345,7 +397,7 @@ def obtener_distancia() -> dict:
 @mcp.tool()
 def obtener_historial(cantidad: int = 20) -> dict:
     """
-    Devuelve las últimas lecturas de distancia (máx. 120, ≈10 minutos) junto
+    Devuelve las últimas lecturas de distancia (máx. 120) junto
     con estadísticas: mínimo, máximo y promedio en cm. Útil para describir
     tendencias, por ejemplo si un objeto se está acercando o alejando.
 
@@ -376,7 +428,7 @@ def obtener_estado_leds() -> dict:
     if leds is None:
         return {"error": "El objeto inteligente aún no reportó el estado de sus LEDs."}
     return {
-        "leds": {color: "on" if encendido else "off" for color, encendido in leds.items()},
+        "leds": _leds_como_texto(leds),
         "encendidos": [color for color, encendido in leds.items() if encendido],
         "antiguedad_s": round(time.time() - recibido_en, 1),
     }
@@ -386,21 +438,22 @@ def obtener_estado_leds() -> dict:
 def controlar_led(color: Color, estado: Estado) -> dict:
     """
     Enciende o apaga un LED del objeto inteligente. El objeto solo tiene
-    LEDs (rojo, amarillo y verde); no tiene servomotor.
+    LEDs (rojo, amarillo y verde); no tiene servomotor. "confirmado" indica
+    si el objeto reportó el cambio; si es false, no afirmes que se aplicó.
 
     Args:
         color: "rojo", "amarillo" o "verde".
         estado: "on" para encender, "off" para apagar.
     """
-    error = _enviar({"led": color, "estado": estado})
-    return error or {"ok": True, "led": color, "estado": estado}
+    return _ejecutar([{"led": color, "estado": estado}], {color: estado == "on"})
 
 
 @mcp.tool()
 def establecer_leds(rojo: Estado, amarillo: Estado, verde: Estado) -> dict:
     """
     Fija el estado de los tres LEDs a la vez. Útil para instrucciones como
-    "enciende el LED rojo y apaga los demás".
+    "enciende el LED rojo y apaga los demás". "confirmado" indica si el
+    objeto reportó el cambio; si es false, no afirmes que se aplicó.
 
     Args:
         rojo: "on" u "off".
@@ -412,18 +465,18 @@ def establecer_leds(rojo: Estado, amarillo: Estado, verde: Estado) -> dict:
         comandos = [{"led": "todos", "estado": rojo}]
     else:
         comandos = [{"led": color, "estado": estado} for color, estado in estados.items()]
-    for comando in comandos:
-        error = _enviar(comando)
-        if error:
-            return error
-    return {"ok": True, "leds": estados}
+    return _ejecutar(comandos, {color: estado == "on" for color, estado in estados.items()})
 
 
 @mcp.tool()
 def apagar_todos() -> dict:
-    """Apaga los tres LEDs del objeto inteligente con un único comando."""
-    error = _enviar({"led": "todos", "estado": "off"})
-    return error or {"ok": True, "leds": {color: "off" for color in COLORES_LED}}
+    """
+    Apaga los tres LEDs del objeto inteligente con un único comando.
+    "confirmado" indica si el objeto reportó el cambio.
+    """
+    return _ejecutar(
+        [{"led": "todos", "estado": "off"}], {color: False for color in COLORES_LED}
+    )
 
 
 @mcp.tool()
