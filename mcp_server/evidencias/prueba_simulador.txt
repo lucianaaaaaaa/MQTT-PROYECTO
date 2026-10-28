@@ -1,27 +1,27 @@
-# Salida de probar_herramientas.py contra simulador_objeto.py (2026-10-24 20:06, broker.hivemq.com, prefijo sis234/grupo4)
+# Salida de probar_herramientas.py contra simulador_objeto.py (2026-10-28 12:22, broker.hivemq.com, prefijo sis234/grupo4)
 
 Herramientas: obtener_distancia, obtener_historial, obtener_estado_leds, controlar_led, establecer_leds, apagar_todos, estado_conexion
 
 > ¿Está conectado el objeto?
-  estado_conexion({}) -> { "broker_conectado": true, "broker": "broker.hivemq.com:1883", "objeto_inteligente": "online", "topicos": { "distancia": "sis234/grupo4/distancia", "cmd": "sis234/grupo4/cmd", "estado": "sis234/grupo4/estado", "conexion": "sis234/grupo4/conexion" }, "ultima_lectura": { "distancia_cm": 67.8, "antiguedad_s": 0.2 } }
+  estado_conexion({}) -> { "broker_conectado": true, "broker": "broker.hivemq.com:1883", "objeto_inteligente": "online", "topicos": { "distancia": "sis234/grupo4/distancia", "cmd": "sis234/grupo4/cmd", "estado": "sis234/grupo4/estado", "conexion": "sis234/grupo4/conexion" }, "ultima_lectura": { "distancia_cm": 77.3, "antiguedad_s": 0.2 } }
 
 > ¿A qué distancia está el objeto ahora?
-  obtener_distancia({}) -> { "distancia_cm": 59.8, "antiguedad_s": 0.0 }
+  obtener_distancia({}) -> { "distancia_cm": 77.3, "antiguedad_s": 1.2 }
 
 > ¿El objeto se está acercando?
-  obtener_historial({'cantidad': 8}) -> { "lecturas_cm": [ 64.0, 62.6, 61.3, 59.8, 58.4, 57.0, 55.5, 54.0 ], "minimo_cm": 54.0, "maximo_cm": 64.0, "promedio_cm": 59.1, "intervalo_s": 1.6 }
+  obtener_historial({'cantidad': 8}) -> { "lecturas_cm": [ 77.3 ], "minimo_cm": 77.3, "maximo_cm": 77.3, "promedio_cm": 77.3, "intervalo_s": 0.0 }
 
 > Enciende el LED verde.
-  controlar_led({'color': 'verde', 'estado': 'on'}) -> { "ok": true, "led": "verde", "estado": "on" }
+  controlar_led({'color': 'verde', 'estado': 'on'}) -> { "ok": true, "confirmado": true, "leds": { "rojo": "off", "amarillo": "off", "verde": "on" } }
 
 > Enciende el LED rojo y apaga los demás.
-  establecer_leds({'rojo': 'on', 'amarillo': 'off', 'verde': 'off'}) -> { "ok": true, "leds": { "rojo": "on", "amarillo": "off", "verde": "off" } }
+  establecer_leds({'rojo': 'on', 'amarillo': 'off', 'verde': 'off'}) -> { "ok": true, "confirmado": true, "leds": { "rojo": "on", "amarillo": "off", "verde": "off" } }
 
 > ¿Qué LEDs están encendidos?
-  obtener_estado_leds({}) -> { "leds": { "rojo": "on", "amarillo": "off", "verde": "off" }, "encendidos": [ "rojo" ], "antiguedad_s": 0.3 }
+  obtener_estado_leds({}) -> { "leds": { "rojo": "on", "amarillo": "off", "verde": "off" }, "encendidos": [ "rojo" ], "antiguedad_s": 1.0 }
 
 > Apaga todos los LEDs.
-  apagar_todos({}) -> { "ok": true, "leds": { "rojo": "off", "amarillo": "off", "verde": "off" } }
+  apagar_todos({}) -> { "ok": true, "confirmado": true, "leds": { "rojo": "off", "amarillo": "off", "verde": "off" } }
 
 > ¿Qué LEDs están encendidos?
-  obtener_estado_leds({}) -> { "leds": { "rojo": "off", "amarillo": "off", "verde": "off" }, "encendidos": [], "antiguedad_s": 0.7 }
+  obtener_estado_leds({}) -> { "leds": { "rojo": "off", "amarillo": "off", "verde": "off" }, "encendidos": [], "antiguedad_s": 1.0 }
