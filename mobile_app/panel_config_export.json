@@ -1,24 +1,981 @@
 {
-  "_PENDIENTE": "ARCHIVO PROVISIONAL. Reemplazar por la exportación real de IoT MQTT Panel (menú ⋮ de la conexión → Export) antes de la entrega. Este contenido es solo la especificación del panel, no una exportación de la app.",
-  "conexion": {
-    "broker": "broker.hivemq.com",
-    "puerto": 1883,
-    "protocolo": "TCP",
-    "client_id": "sis234-grupo4-app-<nombre>"
+  "globalSettings": {
+    "appTheme": "dark",
+    "runInBackground": true
   },
-  "dashboard": "Objeto inteligente",
-  "paneles": [
-    { "tipo": "Gauge", "nombre": "Distancia", "topico": "sis234/grupo4/distancia", "json_path": "$.cm", "min": 0, "max": 200, "unidad": "cm" },
-    { "tipo": "Line Graph", "nombre": "Distancia", "topico": "sis234/grupo4/distancia", "json_path": "$.cm", "unidad": "cm" },
-    { "tipo": "Button", "nombre": "Rojo ON", "topico": "sis234/grupo4/cmd", "payload": "{\"led\":\"rojo\",\"estado\":\"on\"}", "retain": false },
-    { "tipo": "Button", "nombre": "Rojo OFF", "topico": "sis234/grupo4/cmd", "payload": "{\"led\":\"rojo\",\"estado\":\"off\"}", "retain": false },
-    { "tipo": "Button", "nombre": "Amarillo ON", "topico": "sis234/grupo4/cmd", "payload": "{\"led\":\"amarillo\",\"estado\":\"on\"}", "retain": false },
-    { "tipo": "Button", "nombre": "Amarillo OFF", "topico": "sis234/grupo4/cmd", "payload": "{\"led\":\"amarillo\",\"estado\":\"off\"}", "retain": false },
-    { "tipo": "Button", "nombre": "Verde ON", "topico": "sis234/grupo4/cmd", "payload": "{\"led\":\"verde\",\"estado\":\"on\"}", "retain": false },
-    { "tipo": "Button", "nombre": "Verde OFF", "topico": "sis234/grupo4/cmd", "payload": "{\"led\":\"verde\",\"estado\":\"off\"}", "retain": false },
-    { "tipo": "Button", "nombre": "Apagar todos", "topico": "sis234/grupo4/cmd", "payload": "{\"led\":\"todos\",\"estado\":\"off\"}", "retain": false },
-    { "tipo": "LED Indicator", "nombre": "Rojo", "topico": "sis234/grupo4/estado", "json_path": "$.rojo", "on": "true", "off": "false" },
-    { "tipo": "LED Indicator", "nombre": "Amarillo", "topico": "sis234/grupo4/estado", "json_path": "$.amarillo", "on": "true", "off": "false" },
-    { "tipo": "LED Indicator", "nombre": "Verde", "topico": "sis234/grupo4/estado", "json_path": "$.verde", "on": "true", "off": "false" }
+  "dashboards": [
+    {
+      "dashboardPrefixTopic": "",
+      "connectionId": "connection_0",
+      "dashboardName": "Objeto Inteligente",
+      "dashboardId": "dashboard_0"
+    }
+  ],
+  "dataVersion": 214,
+  "panels": [
+    {
+      "layouts": {
+        "lg": {
+          "y": 10000,
+          "w": 12,
+          "minH": 11,
+          "x": 0,
+          "h": 14,
+          "minW": 1
+        },
+        "sm": {
+          "y": 10000,
+          "w": 12,
+          "minH": 11,
+          "x": 0,
+          "h": 14,
+          "minW": 2
+        },
+        "md": {
+          "y": 10000,
+          "w": 12,
+          "minH": 11,
+          "x": 0,
+          "h": 14,
+          "minW": 1
+        },
+        "xxs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 11,
+          "x": 0,
+          "h": 14,
+          "minW": 4
+        },
+        "xs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 11,
+          "x": 0,
+          "h": 14,
+          "minW": 4
+        }
+      },
+      "notificationMessage": "<payload>",
+      "firstColorEnd": 50,
+      "panelWidth": "100",
+      "messageFactor": 1,
+      "disableDashboardPrefix": true,
+      "step": 2,
+      "enableNotification": false,
+      "isJSONPayload": true,
+      "notificationMax": "",
+      "notificationMin": "",
+      "notificationFilter": "all",
+      "notificationValue": "",
+      "unit": "cm",
+      "type": "gauge",
+      "payloadMax": 200,
+      "triggerAlarm": false,
+      "connectionId": "connection_0",
+      "dashboardId": "dashboard_0",
+      "thirdColor": "#f60303",
+      "secondColor": "#fac800",
+      "panelName": "Distance",
+      "topic": "sis234/grupo4/distancia",
+      "firstColor": "#009600",
+      "mqttType": "sub",
+      "notificationRegex": "",
+      "payloadMin": 0,
+      "qos": 0,
+      "secondColorEnd": 150,
+      "panelId": "panel_0",
+      "showReceivedTimeStamp": false,
+      "decimalPrecision": 1,
+      "panelMergeClass": "",
+      "jsonPath": "$.cm"
+    },
+    {
+      "comboItemList": [
+        {
+          "notificationFilter": "all",
+          "notificationRegex": "",
+          "label": "Distancia (cm)",
+          "unit": "cm",
+          "notificationMax": "",
+          "showArea": false,
+          "messageFactor": 1,
+          "enableNotification": false,
+          "notificationMin": "",
+          "color": "#ea1111",
+          "topic": "sis234/grupo4/distancia",
+          "decimalPrecision": 1,
+          "triggerAlarm": false,
+          "notificationMessage": "<payload>",
+          "notificationValue": "",
+          "layouts": {
+            "lg": {
+              "y": 10000,
+              "w": 12,
+              "minH": 1,
+              "x": 0,
+              "h": 10,
+              "minW": 1
+            },
+            "sm": {
+              "y": 10000,
+              "w": 12,
+              "minH": 1,
+              "x": 0,
+              "h": 10,
+              "minW": 1
+            },
+            "xs": {
+              "y": 10000,
+              "w": 12,
+              "minH": 1,
+              "x": 0,
+              "h": 10,
+              "minW": 1
+            },
+            "md": {
+              "y": 10000,
+              "w": 12,
+              "minH": 1,
+              "x": 0,
+              "h": 10,
+              "minW": 1
+            },
+            "xxs": {
+              "y": 10000,
+              "w": 12,
+              "minH": 1,
+              "x": 0,
+              "h": 10,
+              "minW": 1
+            }
+          },
+          "showPoints": true,
+          "isJSONPayload": true,
+          "jsonPath": "$.cm"
+        }
+      ],
+      "disableDashboardPrefix": true,
+      "showHistory": true,
+      "panelMergeClass": "",
+      "smoothCurve": false,
+      "qos": 0,
+      "panelName": "Distancia",
+      "type": "line-graph",
+      "connectionId": "connection_0",
+      "panelId": "panel_1",
+      "dashboardId": "dashboard_0",
+      "mqttType": "sub",
+      "maxPersistence": 10,
+      "layouts": {
+        "lg": {
+          "y": 10000,
+          "w": 12,
+          "minH": 22,
+          "x": 0,
+          "h": 38,
+          "minW": 1
+        },
+        "sm": {
+          "y": 10000,
+          "w": 12,
+          "minH": 22,
+          "x": 0,
+          "h": 38,
+          "minW": 4
+        },
+        "md": {
+          "y": 10000,
+          "w": 12,
+          "minH": 22,
+          "x": 0,
+          "h": 38,
+          "minW": 2
+        },
+        "xxs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 22,
+          "x": 0,
+          "h": 38,
+          "minW": 6
+        },
+        "xs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 22,
+          "x": 0,
+          "h": 38,
+          "minW": 6
+        }
+      },
+      "panelWidth": "100",
+      "maxDuraion": ""
+    },
+    {
+      "confirmationMessage": "<payload>",
+      "hasCustomIcon": false,
+      "panelWidth": "100",
+      "topic": "sis234/grupo4/cmd",
+      "dashboardId": "dashboard_0",
+      "qos": 0,
+      "mqttType": "pub",
+      "disableDashboardPrefix": false,
+      "panelName": "Rojo ON",
+      "fitToPanelWidth": false,
+      "jsonEnvelope": "{\"led\":\"rojo\",\"estado\":\"on\"}",
+      "isJSONPayload": true,
+      "icon": "button",
+      "buttonSize": "medium",
+      "noPayload": false,
+      "confirmBeforePublish": false,
+      "type": "button",
+      "connectionId": "connection_0",
+      "retain": false,
+      "payload": "{\"led\":\"rojo\",\"estado\":\"on\"}",
+      "payloadOnRelease": "",
+      "layouts": {
+        "lg": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 1
+        },
+        "sm": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 2
+        },
+        "xs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 3
+        },
+        "md": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 1
+        },
+        "xxs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 3
+        }
+      },
+      "iconColor": "#9e9e9e",
+      "repeatInterval": 1000,
+      "repeatUntilReleased": false,
+      "defaultColor": "danger",
+      "showSentTimeStamp": false,
+      "hidePanelName": false,
+      "panelMergeClass": "",
+      "panelId": "panel_2"
+    },
+    {
+      "confirmationMessage": "<payload>",
+      "hasCustomIcon": false,
+      "jsonEnvelope": "{\"led\":\"rojo\",\"estado\":\"off\"}",
+      "panelWidth": "100",
+      "dashboardId": "dashboard_0",
+      "panelName": "Rojo OFF",
+      "mqttType": "pub",
+      "topic": "sis234/grupo4/cmd",
+      "icon": "button",
+      "noPayload": false,
+      "disableDashboardPrefix": false,
+      "isJSONPayload": true,
+      "buttonSize": "medium",
+      "fitToPanelWidth": false,
+      "qos": 0,
+      "confirmBeforePublish": false,
+      "type": "button",
+      "connectionId": "connection_0",
+      "retain": false,
+      "payload": "{\"led\":\"rojo\",\"estado\":\"off\"}",
+      "payloadOnRelease": "",
+      "repeatInterval": 1000,
+      "iconColor": "#9e9e9e",
+      "layouts": {
+        "lg": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 1
+        },
+        "sm": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 2
+        },
+        "md": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 1
+        },
+        "xxs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 3
+        },
+        "xs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 3
+        }
+      },
+      "repeatUntilReleased": false,
+      "showSentTimeStamp": false,
+      "defaultColor": "danger",
+      "hidePanelName": false,
+      "panelMergeClass": "",
+      "panelId": "panel_3"
+    },
+    {
+      "confirmationMessage": "<payload>",
+      "hasCustomIcon": false,
+      "disableDashboardPrefix": false,
+      "topic": "sis234/grupo4/cmd",
+      "jsonEnvelope": "{\"led\":\"amarillo\",\"estado\":\"on\"}",
+      "qos": 0,
+      "mqttType": "pub",
+      "dashboardId": "dashboard_0",
+      "icon": "button",
+      "noPayload": false,
+      "fitToPanelWidth": false,
+      "buttonSize": "medium",
+      "isJSONPayload": true,
+      "panelWidth": "100",
+      "panelName": "Amarillo ON",
+      "confirmBeforePublish": false,
+      "type": "button",
+      "connectionId": "connection_0",
+      "retain": false,
+      "payload": "{\"led\":\"amarillo\",\"estado\":\"on\"}",
+      "payloadOnRelease": "",
+      "layouts": {
+        "lg": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 1
+        },
+        "sm": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 2
+        },
+        "md": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 1
+        },
+        "xxs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 3
+        },
+        "xs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 3
+        }
+      },
+      "iconColor": "#9e9e9e",
+      "repeatInterval": 1000,
+      "repeatUntilReleased": false,
+      "defaultColor": "warning",
+      "showSentTimeStamp": false,
+      "hidePanelName": false,
+      "panelMergeClass": "",
+      "panelId": "panel_4"
+    },
+    {
+      "confirmationMessage": "<payload>",
+      "hasCustomIcon": false,
+      "panelWidth": "100",
+      "disableDashboardPrefix": false,
+      "dashboardId": "dashboard_0",
+      "qos": 0,
+      "topic": "sis234/grupo4/cmd",
+      "mqttType": "pub",
+      "panelName": "Amarillo OFF",
+      "noPayload": false,
+      "icon": "button",
+      "isJSONPayload": true,
+      "fitToPanelWidth": false,
+      "buttonSize": "medium",
+      "jsonEnvelope": "{\"led\":\"amarillo\",\"estado\":\"off\"}",
+      "confirmBeforePublish": false,
+      "type": "button",
+      "connectionId": "connection_0",
+      "retain": false,
+      "payload": "{\"led\":\"amarillo\",\"estado\":\"off\"}",
+      "payloadOnRelease": "",
+      "layouts": {
+        "lg": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 1
+        },
+        "sm": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 2
+        },
+        "md": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 1
+        },
+        "xxs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 3
+        },
+        "xs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 3
+        }
+      },
+      "iconColor": "#9e9e9e",
+      "repeatInterval": 1000,
+      "repeatUntilReleased": false,
+      "defaultColor": "warning",
+      "showSentTimeStamp": false,
+      "panelMergeClass": "",
+      "hidePanelName": false,
+      "panelId": "panel_5"
+    },
+    {
+      "confirmationMessage": "<payload>",
+      "hasCustomIcon": false,
+      "panelWidth": "100",
+      "disableDashboardPrefix": false,
+      "dashboardId": "dashboard_0",
+      "qos": 0,
+      "mqttType": "pub",
+      "topic": "sis234/grupo4/cmd",
+      "icon": "button",
+      "noPayload": false,
+      "fitToPanelWidth": false,
+      "buttonSize": "medium",
+      "isJSONPayload": true,
+      "panelName": "Verde ON",
+      "jsonEnvelope": "{\"led\":\"verde\",\"estado\":\"on\"}",
+      "confirmBeforePublish": false,
+      "type": "button",
+      "connectionId": "connection_0",
+      "retain": false,
+      "payload": "{\"led\":\"verde\",\"estado\":\"on\"}",
+      "payloadOnRelease": "",
+      "layouts": {
+        "lg": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 1
+        },
+        "sm": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 2
+        },
+        "xs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 3
+        },
+        "xxs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 3
+        },
+        "md": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 1
+        }
+      },
+      "iconColor": "#9e9e9e",
+      "repeatInterval": 1000,
+      "repeatUntilReleased": false,
+      "showSentTimeStamp": false,
+      "defaultColor": "success",
+      "hidePanelName": false,
+      "panelMergeClass": "",
+      "panelId": "panel_6"
+    },
+    {
+      "jsonEnvelope": "{\"led\":\"verde\",\"estado\":\"off\"}",
+      "hasCustomIcon": false,
+      "disableDashboardPrefix": false,
+      "panelWidth": "100",
+      "confirmationMessage": "<payload>",
+      "panelName": "Verde OFF",
+      "mqttType": "pub",
+      "qos": 0,
+      "icon": "button",
+      "fitToPanelWidth": false,
+      "noPayload": false,
+      "isJSONPayload": true,
+      "buttonSize": "medium",
+      "dashboardId": "dashboard_0",
+      "topic": "sis234/grupo4/cmd",
+      "confirmBeforePublish": false,
+      "type": "button",
+      "connectionId": "connection_0",
+      "retain": false,
+      "payload": "{\"led\":\"verde\",\"estado\":\"off\"}",
+      "payloadOnRelease": "",
+      "repeatInterval": 1000,
+      "layouts": {
+        "lg": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 1
+        },
+        "sm": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 2
+        },
+        "md": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 1
+        },
+        "xs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 3
+        },
+        "xxs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 3
+        }
+      },
+      "iconColor": "#9e9e9e",
+      "repeatUntilReleased": false,
+      "defaultColor": "success",
+      "showSentTimeStamp": false,
+      "hidePanelName": false,
+      "panelMergeClass": "",
+      "panelId": "panel_7"
+    },
+    {
+      "jsonEnvelope": "{\"led\":\"todos\",\"estado\":\"off\"}",
+      "hasCustomIcon": false,
+      "disableDashboardPrefix": true,
+      "confirmationMessage": "<payload>",
+      "dashboardId": "dashboard_0",
+      "panelName": "Apagar Todos",
+      "mqttType": "pub",
+      "qos": 0,
+      "icon": "button",
+      "noPayload": false,
+      "fitToPanelWidth": false,
+      "isJSONPayload": true,
+      "buttonSize": "medium",
+      "topic": "sis234/grupo4/cmd",
+      "panelWidth": "100",
+      "confirmBeforePublish": false,
+      "type": "button",
+      "connectionId": "connection_0",
+      "retain": false,
+      "payload": "{\"led\":\"todos\",\"estado\":\"off\"}",
+      "payloadOnRelease": "",
+      "repeatInterval": 1000,
+      "iconColor": "#9e9e9e",
+      "layouts": {
+        "lg": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 1
+        },
+        "sm": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 2
+        },
+        "xs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 3
+        },
+        "xxs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 3
+        },
+        "md": {
+          "y": 10000,
+          "w": 12,
+          "minH": 6,
+          "x": 0,
+          "h": 8,
+          "minW": 1
+        }
+      },
+      "repeatUntilReleased": false,
+      "defaultColor": "dark",
+      "showSentTimeStamp": false,
+      "panelMergeClass": "",
+      "hidePanelName": false,
+      "panelId": "panel_8"
+    },
+    {
+      "iconOff": "led",
+      "disableDashboardPrefix": true,
+      "topic": "sis234/grupo4/estado",
+      "panelWidth": "100",
+      "panelName": "LED Rojo",
+      "mqttType": "sub",
+      "payloadOn": "true",
+      "dashboardId": "dashboard_0",
+      "iconSize": "small",
+      "notificationMessage": "<payload>",
+      "enableNotification": false,
+      "isJSONPayload": true,
+      "qos": 0,
+      "notificationValue": "",
+      "iconColorOn": "#df0000",
+      "jsonPath": "$.rojo",
+      "type": "led",
+      "connectionId": "connection_0",
+      "triggerAlarm": false,
+      "showReceivedTimeStamp": false,
+      "layouts": {
+        "lg": {
+          "y": 10000,
+          "w": 12,
+          "minH": 4,
+          "x": 0,
+          "h": 6,
+          "minW": 1
+        },
+        "sm": {
+          "y": 10000,
+          "w": 12,
+          "minH": 4,
+          "x": 0,
+          "h": 6,
+          "minW": 2
+        },
+        "md": {
+          "y": 10000,
+          "w": 12,
+          "minH": 4,
+          "x": 0,
+          "h": 6,
+          "minW": 1
+        },
+        "xxs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 4,
+          "x": 0,
+          "h": 6,
+          "minW": 3
+        },
+        "xs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 4,
+          "x": 0,
+          "h": 6,
+          "minW": 3
+        }
+      },
+      "payloadOff": "false",
+      "notificationMax": "",
+      "iconColorOff": "#9e9e9e",
+      "iconOn": "led",
+      "notificationFilter": "all",
+      "hidePanelName": false,
+      "notificationRegex": "",
+      "panelMergeClass": "",
+      "panelId": "panel_9",
+      "notificationMin": ""
+    },
+    {
+      "iconOff": "led",
+      "panelWidth": "100",
+      "topic": "sis234/grupo4/estado",
+      "payloadOn": "true",
+      "qos": 0,
+      "mqttType": "sub",
+      "panelName": "LED Amarillo",
+      "iconSize": "small",
+      "disableDashboardPrefix": true,
+      "notificationMessage": "<payload>",
+      "enableNotification": false,
+      "isJSONPayload": true,
+      "dashboardId": "dashboard_0",
+      "notificationValue": "",
+      "iconColorOn": "#ffff33",
+      "jsonPath": "$.amarillo",
+      "type": "led",
+      "connectionId": "connection_0",
+      "triggerAlarm": false,
+      "showReceivedTimeStamp": false,
+      "layouts": {
+        "lg": {
+          "y": 10000,
+          "w": 12,
+          "minH": 4,
+          "x": 0,
+          "h": 6,
+          "minW": 1
+        },
+        "sm": {
+          "y": 10000,
+          "w": 12,
+          "minH": 4,
+          "x": 0,
+          "h": 6,
+          "minW": 2
+        },
+        "md": {
+          "y": 10000,
+          "w": 12,
+          "minH": 4,
+          "x": 0,
+          "h": 6,
+          "minW": 1
+        },
+        "xxs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 4,
+          "x": 0,
+          "h": 6,
+          "minW": 3
+        },
+        "xs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 4,
+          "x": 0,
+          "h": 6,
+          "minW": 3
+        }
+      },
+      "payloadOff": "false",
+      "notificationMax": "",
+      "notificationMin": "",
+      "iconColorOff": "#9e9e9e",
+      "notificationFilter": "all",
+      "panelMergeClass": "",
+      "hidePanelName": false,
+      "notificationRegex": "",
+      "panelId": "panel_10",
+      "iconOn": "led"
+    },
+    {
+      "iconOff": "led",
+      "payloadOn": "true",
+      "disableDashboardPrefix": true,
+      "topic": "sis234/grupo4/estado",
+      "panelName": "LED Verde",
+      "mqttType": "sub",
+      "qos": 0,
+      "iconSize": "small",
+      "panelWidth": "100",
+      "notificationMessage": "<payload>",
+      "enableNotification": false,
+      "isJSONPayload": true,
+      "dashboardId": "dashboard_0",
+      "notificationValue": "",
+      "jsonPath": "$.verde",
+      "iconColorOn": "#00f500",
+      "type": "led",
+      "connectionId": "connection_0",
+      "triggerAlarm": false,
+      "showReceivedTimeStamp": false,
+      "layouts": {
+        "lg": {
+          "y": 10000,
+          "w": 12,
+          "minH": 4,
+          "x": 0,
+          "h": 6,
+          "minW": 1
+        },
+        "sm": {
+          "y": 10000,
+          "w": 12,
+          "minH": 4,
+          "x": 0,
+          "h": 6,
+          "minW": 2
+        },
+        "xs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 4,
+          "x": 0,
+          "h": 6,
+          "minW": 3
+        },
+        "md": {
+          "y": 10000,
+          "w": 12,
+          "minH": 4,
+          "x": 0,
+          "h": 6,
+          "minW": 1
+        },
+        "xxs": {
+          "y": 10000,
+          "w": 12,
+          "minH": 4,
+          "x": 0,
+          "h": 6,
+          "minW": 3
+        }
+      },
+      "payloadOff": "false",
+      "notificationMax": "",
+      "notificationMin": "",
+      "iconOn": "led",
+      "notificationFilter": "all",
+      "panelMergeClass": "",
+      "notificationRegex": "",
+      "hidePanelName": false,
+      "iconColorOff": "#9e9e9e",
+      "panelId": "panel_11"
+    }
+  ],
+  "connections": [
+    {
+      "willPayload": "",
+      "clientCertificateFileName": "",
+      "allowUntrustCACertificate": false,
+      "defaultDashboard": "dashboard_0",
+      "username": "",
+      "path": "/mqtt",
+      "enableWillMessage": false,
+      "disableHostnameCheck": false,
+      "webPort": 8080,
+      "password": "",
+      "webConnectionType": "ws",
+      "clientId": "",
+      "port": 1883,
+      "host": "",
+      "willTopic": "",
+      "connectionId": "connection_0",
+      "keepAlive": 300,
+      "connectionName": "Grupo4",
+      "willRetain": false,
+      "clientKeyFileName": "",
+      "willQoS": 0,
+      "cleanSession": true,
+      "tlsVersion": "TLSv1.2",
+      "encryptionPassword": "",
+      "connectionType": "tcp",
+      "autoConnect": true,
+      "caCertificateFileName": "",
+      "notifyOnDisconnect": false
+    }
   ]
 }
