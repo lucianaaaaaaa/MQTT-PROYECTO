@@ -22,28 +22,6 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 
-// config.h (raíz del repo) no se versiona; si existe, define los pines reales.
-#if __has_include("../config.h")
-#include "../config.h"
-#elif __has_include("config.h")
-#include "config.h"
-#endif
-
-/// Pin GPIO del LED rojo (valor por defecto si config.h no lo define).
-#ifndef LED_ROJO_PIN
-#define LED_ROJO_PIN 25
-#endif
-
-/// Pin GPIO del LED amarillo (valor por defecto si config.h no lo define).
-#ifndef LED_AMARILLO_PIN
-#define LED_AMARILLO_PIN 26
-#endif
-
-/// Pin GPIO del LED verde (valor por defecto si config.h no lo define).
-#ifndef LED_VERDE_PIN
-#define LED_VERDE_PIN 27
-#endif
-
 /**
  * @brief Identificador de cada LED. `Todos` aplica la acción a los tres.
  */
@@ -66,13 +44,15 @@ class Actuadores {
 
   /**
    * @brief Construye el controlador con los pines de cada LED.
+   *
+   * Los pines se definen en main.cpp junto con los del sensor, para tener
+   * todo el cableado en un solo lugar. No usar GPIO 34-39 (solo entrada).
+   *
    * @param pinRojo     GPIO del LED rojo.
    * @param pinAmarillo GPIO del LED amarillo.
    * @param pinVerde    GPIO del LED verde.
    */
-  Actuadores(uint8_t pinRojo = LED_ROJO_PIN,
-             uint8_t pinAmarillo = LED_AMARILLO_PIN,
-             uint8_t pinVerde = LED_VERDE_PIN)
+  Actuadores(uint8_t pinRojo, uint8_t pinAmarillo, uint8_t pinVerde)
       : _pines{pinRojo, pinAmarillo, pinVerde}, _estados{false, false, false} {}
 
   /**

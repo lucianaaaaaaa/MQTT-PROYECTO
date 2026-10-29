@@ -4,9 +4,11 @@
  *
  * Flujo:
  *  - SensorUltrasonico muestrea la distancia cada 60 ms y la filtra (mediana).
- *  - Cada PERIODO_PUBLICACION_MS se publica la distancia filtrada en TOPICO_DISTANCIA.
+ *  - Cada PERIODO_PUBLICACION_MS se publica la distancia filtrada en TOPICO_DISTANCIA (RF2).
  *  - ConexionMQTT mantiene WiFi + broker y entrega los comandos de TOPICO_COMANDOS
- *    al manejador de actuadores.
+ *    a Actuadores, que los valida y los aplica sobre los LEDs (RF3).
+ *  - Tras cada comando aplicado, y cada vez que se (re)conecta, se publica el estado
+ *    real de los LEDs en TOPICO_ESTADO_LEDS (retenido).
  *
  * Credenciales: copiar config.example.h (raíz del repositorio) como config.h y completarlo.
  */
@@ -18,6 +20,7 @@
 #error "Falta config.h en la raíz del repositorio: copia config.example.h como config.h y completa tus credenciales."
 #endif
 
+#include "Actuadores.h"
 #include "ConexionMQTT.h"
 #include "SensorUltrasonico.h"
 
@@ -26,10 +29,10 @@
 // ----------------------------------------------------------------------------
 #define MQTT_PREFIJO "sis234/grupo4"
 
-static const char TOPICO_DISTANCIA[] = MQTT_PREFIJO "/distancia";  // Publica: {"cm": 42.7}
-static const char TOPICO_COMANDOS[]  = MQTT_PREFIJO "/cmd";        // Se suscribe: {"led": "rojo", "estado": "on"}
-static const char TOPICO_CONEXION[]  = MQTT_PREFIJO "/conexion";   // "online"/"offline" (retenido + Last Will)
-// MQTT_PREFIJO "/estado" queda reservado para el estado de los LEDs (clase Actuadores).
+static const char TOPICO_DISTANCIA[]   = MQTT_PREFIJO "/distancia";  // Publica: {"cm": 42.7}
+static const char TOPICO_COMANDOS[]    = MQTT_PREFIJO "/cmd";        // Se suscribe: {"led": "rojo", "estado": "on"}
+static const char TOPICO_ESTADO_LEDS[] = MQTT_PREFIJO "/estado";     // Publica (retenido): {"rojo": true, "amarillo": false, "verde": false}
+static const char TOPICO_CONEXION[]    = MQTT_PREFIJO "/conexion";   // "online"/"offline" (retenido + Last Will)
 
 // ----------------------------------------------------------------------------
 // Hardware
@@ -66,16 +69,11 @@ ConexionMQTT conexion(WIFI_SSID, WIFI_PASSWORD,
                       MQTT_BROKER, MQTT_PUERTO, MQTT_USUARIO, MQTT_CLAVE,
                       TOPICO_CONEXION);
 
-// ----------------------------------------------------------------------------
-// Actuadores (Integrante 3): LEDs rojo/amarillo/verde controlados por TOPICO_COMANDOS
-// ----------------------------------------------------------------------------
-#include "Actuadores.h"
-
-// Estado de los LEDs según el contrato del grupo: {"rojo": true, "amarillo": false, "verde": false}
-static const char TOPICO_ESTADO_LEDS[] = MQTT_PREFIJO "/estado";
-
 Actuadores actuadores(PIN_LED_ROJO, PIN_LED_AMARILLO, PIN_LED_VERDE);
+
 bool estabaConectado = false;
+uint32_t ultimaPublicacionMs = 0;
+uint32_t ultimoDiagnosticoMs = 0;
 
 /// Publica el estado de los LEDs como mensaje retenido (RF3).
 void publicarEstadoLeds() {
@@ -84,9 +82,6 @@ void publicarEstadoLeds() {
         conexion.publicar(TOPICO_ESTADO_LEDS, payload, true);
     }
 }
-
-uint32_t ultimaPublicacionMs = 0;
-uint32_t ultimoDiagnosticoMs = 0;
 
 /// Publica la distancia filtrada si hay una lectura válida (RF2).
 void publicarDistancia() {

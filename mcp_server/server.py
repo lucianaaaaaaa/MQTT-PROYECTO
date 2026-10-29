@@ -121,7 +121,7 @@ class ClienteMQTT:
       suscribirse en cada conexión.
     """
 
-    TAMANO_HISTORIAL = 120  # Últimas 120 lecturas: 1 min a 2 lecturas/s, 10 min a 1 cada 5 s
+    TAMANO_HISTORIAL = 120  # Últimas 120 lecturas: 10 min a 1 lectura cada 5 s
 
     def __init__(self, config: ConfiguracionMQTT) -> None:
         self._config = config
@@ -260,24 +260,29 @@ class ClienteMQTT:
             return leds, self._estado_leds_en
 
     def esperar_estado_leds(
-        self, esperado: dict[str, bool], timeout_s: float
-    ) -> dict[str, bool] | None:
+        self, esperado: dict[str, bool], desde: float, timeout_s: float
+    ) -> tuple[dict[str, bool] | None, bool]:
         """
-        Espera hasta `timeout_s` segundos a que el objeto reporte en /estado
-        los LEDs de `esperado` con esos valores (los demás no se comparan).
+        Espera hasta `timeout_s` segundos a que el objeto reporte en /estado,
+        después del instante `desde`, los LEDs de `esperado` con esos valores
+        (los demás no se comparan). Un estado retenido anterior al comando no
+        cuenta como confirmación, aunque coincida.
 
-        Devuelve el último estado reportado, coincida o no, o None si el
-        objeto nunca informó su estado.
+        Devuelve el último estado reportado (o None si el objeto nunca informó
+        su estado) y si el objeto confirmó el cambio.
         """
 
-        def coincide() -> bool:
-            return self._estado_leds is not None and all(
-                self._estado_leds[color] == valor for color, valor in esperado.items()
+        def confirmado() -> bool:
+            return (
+                self._estado_leds is not None
+                and self._estado_leds_en is not None
+                and self._estado_leds_en >= desde
+                and all(self._estado_leds[color] == valor for color, valor in esperado.items())
             )
 
         with self._dato_nuevo:
-            self._dato_nuevo.wait_for(coincide, timeout=timeout_s)
-            return dict(self._estado_leds) if self._estado_leds else None
+            ok = self._dato_nuevo.wait_for(confirmado, timeout=timeout_s)
+            return (dict(self._estado_leds) if self._estado_leds else None), ok
 
     def conexion_objeto(self) -> str | None:
         """"online", "offline" o None si el objeto aún no lo informó."""
@@ -318,7 +323,7 @@ mcp = FastMCP(
 )
 
 # Si la última lectura es más antigua que esto, se avisa que no es reciente
-# (holgado para cualquier periodo de publicación del firmware de hasta 5 s).
+# (el firmware publica cada 5 s: se toleran hasta 2 lecturas perdidas).
 LECTURA_VIEJA_S = 15.0
 
 # Tiempo máximo que se espera a que el objeto confirme un comando en /estado.
@@ -355,14 +360,12 @@ def _ejecutar(comandos: list[dict], esperado: dict[str, bool]) -> dict:
     LEDs quedaron como `esperado`. Que el broker reciba el comando no basta:
     si el objeto está apagado, nadie lo aplica.
     """
+    enviado_en = time.time()
     for comando in comandos:
         error = _enviar(comando)
         if error:
             return error
-    leds = mqtt_cliente.esperar_estado_leds(esperado, CONFIRMACION_S)
-    confirmado = leds is not None and all(
-        leds[color] == valor for color, valor in esperado.items()
-    )
+    leds, confirmado = mqtt_cliente.esperar_estado_leds(esperado, enviado_en, CONFIRMACION_S)
     resultado = {
         "ok": True,
         "confirmado": confirmado,

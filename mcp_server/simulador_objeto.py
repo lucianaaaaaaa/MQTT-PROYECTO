@@ -33,7 +33,7 @@ leds = {"rojo": False, "amarillo": False, "verde": False}
 
 
 def publicar_estado(cliente):
-    cliente.publish(TOPICO_ESTADO, json.dumps(leds), qos=1, retain=True)
+    cliente.publish(TOPICO_ESTADO, json.dumps(leds), qos=0, retain=True)  # Igual que el ESP32
 
 
 def al_conectar(cliente, _userdata, _flags, _reason_code, _properties):
